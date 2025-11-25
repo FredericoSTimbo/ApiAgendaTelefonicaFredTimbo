@@ -6,19 +6,78 @@ namespace ApiAgendaTelefonica.Controllers
 {
     public class TodoController : ControllerBase
     {
-        List<Todo> todos = new List<Todo>
 
-        {
-            new Todo {Id = 1, Title = "Comprar leite", IsCompleted = true},
-            new Todo {Id = 2, Title = "Estudar AspNet", IsCompleted = true},
-            new Todo {Id = 3, Title = "Fazer exercícios", IsCompleted = false},
-        };
 
         [Route("/api/todo")]
-        public IActionResult GetAllTodos()  
+        public IActionResult GetAllTodos()
         {
-            return Ok();
+            return Ok(TodoList.Tasks.Values);
 
         }
+        [Route("/api/todo/{id}")]
+        public IActionResult GetTodoById(int id)
+        {
+            if (!TodoList.Tasks.ContainsKey(id))
+            {
+                return NotFound();
+
+            }
+            return Ok(TodoList.Tasks[id]);
+
+        }
+        [HttpPost]
+        [Route("/api/todo")]
+        public IActionResult CreateTodo([FromBody] Todo todo)
+        {
+            if (TodoList.Tasks.ContainsKey(todo.Id))
+                return Conflict(todo);
+
+
+            TodoList.Tasks.Add(todo.Id, todo);
+
+            return Created();
+
+
+        }
+        [HttpPut]
+        [Route("/api/todo/{id}")]
+        public IActionResult CreateTodo([FromBody] Todo todo, int id)
+        {
+            if (id != todo.Id)
+                return BadRequest();
+
+            if (!TodoList.Tasks.ContainsKey(id))
+                return NotFound();
+
+            var existing = TodoList.Tasks[id];
+
+            existing.Title = todo.Title;
+            existing.Description = todo.Description;
+            existing.IsCompleted = todo.IsCompleted;
+
+            return Ok(existing);
+
+
+
+        }
+        [HttpDelete]
+        [Route("/api/todo/{id}")]
+        public IActionResult Delete(int id)
+
+        {
+            if (!TodoList.Tasks.ContainsKey(id))
+                return NotFound();
+
+            TodoList.Tasks.Remove(id);
+            return NoContent();
+
+        }
+
     }
+
+
 }
+
+
+
+
