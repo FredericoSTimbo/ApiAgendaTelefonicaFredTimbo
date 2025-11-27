@@ -1,29 +1,38 @@
 ﻿using ApiAgendaTelefonica.Models;
+using ApiAgendaTelefonica.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace ApiAgendaTelefonica.Controllers
 {
     public class ContatoController : ControllerBase
     {
-
+        private readonly IContatoRepository contatoRepository;
+        public ContatoController(IContatoRepository contatoRepository)
+        {
+            this.contatoRepository = contatoRepository;
+        }
         [Route("/api/contatos")]
         public IActionResult GetAllContatos()
         {
-            return Ok(ContatoList.Tasks.Values);
+            return Ok(contatoRepository.GetAll());
+
 
         }
         [Route("/api/contatos/{id}")]
         public IActionResult GetContatosById(int id)
         {
-            if (!ContatoList.Tasks.ContainsKey(id))
+            var contato = contatoRepository.GetById(id);
+
+            if (contato == null)
             {
                 return NotFound();
 
             }
-            return Ok(ContatoList.Tasks[id]);
+            return Ok(contato);
 
         }
         [HttpPost]
@@ -31,17 +40,11 @@ namespace ApiAgendaTelefonica.Controllers
 
         public IActionResult CreateContato([FromBody] Contato contato)
         {
+            var existingContato = contatoRepository.GetById(contato.Id);
+            if (existingContato != null)
+                return Conflict(existingContato);
 
-            if (ContatoList.Tasks.ContainsKey(contato.Nome))
-            {
-                return Conflict(contato);
-            }
-
-            if (id != contato.Id)
-                return BadRequest();
-
-            ContatoList.Tasks.Add(contato.Id, contato);
-
+            contato = contatoRepository.Create(contato);
             return Created();
 
 
@@ -53,22 +56,21 @@ namespace ApiAgendaTelefonica.Controllers
         [Route("/api/contatos/{id}")]
         public IActionResult CreateContato([FromBody] Contato contato, int id)
         {
+            if (id != contato.Id)
+                return BadRequest();
 
-            if (!ContatoList.Tasks.ContainsKey(id))
+            var existingContato = contatoRepository.GetById(contato.Id);
+            if (existingContato == null)
                 return NotFound();
 
-            if (ContatoList.Tasks.ContainsKey(contato.Nome))
-            {
-                return Conflict(contato);
-            }
-
-            var existing = ContatoList.Tasks[id];
-
-            existing.Nome = contato.Nome;
-            existing.Telefone = contato.Telefone;
+            existingContato.Nome = contato.Nome;
+            existingContato.Telefone = contato.Telefone;
             
+            var retorno = contatoRepository.Update(existingContato);
 
-            return Ok(existing);
+
+            return Ok(retorno);
+
 
 
 
@@ -78,10 +80,11 @@ namespace ApiAgendaTelefonica.Controllers
         public IActionResult Delete(int id)
 
         {
-            if (!ContatoList.Tasks.ContainsKey(id))
+            var existingContato = contatoRepository.GetById(id);
+            if (existingContato == null)
                 return NotFound();
 
-            ContatoList.Tasks.Remove(id);
+            contatoRepository.Delete(id);
             return NoContent();
 
         }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using ApiAgendaTelefonica.Repositories;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ApiAgendaTelefonica
@@ -9,6 +10,7 @@ namespace ApiAgendaTelefonica
         {
             var builder = WebApplication.CreateBuilder();
             builder.Services.AddControllers();
+            builder.Services.AddScoped<IContatoRepository, ContatoRepository>();
             var app = builder.Build();
             app.MapControllers();
             app.Run();
