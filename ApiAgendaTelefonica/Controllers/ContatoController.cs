@@ -8,7 +8,6 @@ namespace ApiAgendaTelefonica.Controllers
 {
     public class ContatoController : ControllerBase
     {
-        private object _context;
 
         [Route("/api/contatos")]
         public IActionResult GetAllContatos()
@@ -33,14 +32,17 @@ namespace ApiAgendaTelefonica.Controllers
         public IActionResult CreateContato([FromBody] Contato contato)
         {
 
-            if (ContatoList.Tasks.ContainsKey(contato.Nome, contato))
+            if (ContatoList.Tasks.ContainsKey(contato.Nome))
             {
-                ContatoList.Tasks.Add(contato.Id, contato);
-
-                return Created();
+                return Conflict(contato);
             }
 
-            return Conflict(contato);
+            if (id != contato.Id)
+                return BadRequest();
+
+            ContatoList.Tasks.Add(contato.Id, contato);
+
+            return Created();
 
 
         }
@@ -51,11 +53,14 @@ namespace ApiAgendaTelefonica.Controllers
         [Route("/api/contatos/{id}")]
         public IActionResult CreateContato([FromBody] Contato contato, int id)
         {
-            if (id != contato.Id)
-                return BadRequest();
 
             if (!ContatoList.Tasks.ContainsKey(id))
                 return NotFound();
+
+            if (ContatoList.Tasks.ContainsKey(contato.Nome))
+            {
+                return Conflict(contato);
+            }
 
             var existing = ContatoList.Tasks[id];
 

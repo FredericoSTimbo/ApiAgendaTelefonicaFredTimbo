@@ -6,7 +6,7 @@ namespace ApiAgendaTelefonica
 {
     public class ContatoList
     {
-        public static Dictionary<int, string Contato> Tasks { get; set; }
+        public static Dictionary<int, Contato> Tasks { get; set; }
 
         static ContatoList()
         {
